@@ -13,15 +13,20 @@ from airflow.providers.standard.operators.empty import EmptyOperator
 with DAG("scheduling_every_15_minutes", schedule="*/15 * * * *") as dag:
     task_minute = EmptyOperator(task_id="every_15_minutes")
 
-# be carefull of timezone
+# be careful of timezone
 with DAG("scheduling_twice_per_day", schedule="15 10,15 * * *") as dag:
     task_5_minutes = EmptyOperator(task_id="twice_per_day")
 
 with DAG("scheduling_every_hour", schedule="30 * * * *") as dag:
     task_5_minutes = EmptyOperator(task_id="every_hour")
 
+with DAG(
+    "scheduling_first_day_of_the_month", schedule="10 0 * * 1", catchup=False
+) as dag:
+    task_first_day = EmptyOperator(task_id="first_day")
+
 with DAG("scheduling_first_wednesday_of_the_month", schedule="10 10 * * WED#1") as dag:
-    task_5_minutes = EmptyOperator(task_id="first_wednesday")
+    task_first_wed = EmptyOperator(task_id="first_wednesday")
 
 with DAG("scheduling_first_monday_of_the_month", schedule="0 0 * * MON#1") as dag:
-    task_5_minutes = EmptyOperator(task_id="first_monday")
+    task_first_mon = EmptyOperator(task_id="first_monday")
