@@ -13,7 +13,7 @@ def other_wait(ms: int):
     time.sleep(ms / 1000)
 
 
-# tâches éxecuté en parallèles
+# tâches éxecutés en parallèles
 # o = Task
 #     o2 - o4
 # o1 -   \   - o6
