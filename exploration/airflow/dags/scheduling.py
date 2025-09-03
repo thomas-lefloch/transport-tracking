@@ -21,7 +21,7 @@ with DAG("scheduling_every_hour", schedule="30 * * * *") as dag:
     task_5_minutes = EmptyOperator(task_id="every_hour")
 
 with DAG(
-    "scheduling_first_day_of_the_month", schedule="10 0 * * 1", catchup=False
+    "scheduling_first_day_of_the_month", schedule="10 0 1 * *", catchup=False
 ) as dag:
     task_first_day = EmptyOperator(task_id="first_day")
 
