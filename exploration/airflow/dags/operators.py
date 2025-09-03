@@ -27,6 +27,12 @@ with DAG("operators_order") as dag:
     task_6 = other_wait.override(task_id="6")(1000)
 
     task_1 >> task_2 >> task_4 >> task_6
-
     task_1 >> task_3 >> task_5 >> task_6
     task_5 << task_2
+
+    # aussi valide
+    # task_1 >> [task_2, task_3]
+    # task_2 >> task_4
+    # task_3 >> task_5
+    # [task_4, task5] >> task_6
+    # task_5 << task_2
