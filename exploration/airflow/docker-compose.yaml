@@ -1,11 +1,15 @@
 ---
-x-airflow-common: &airflow-common
+x-airflow-common:
+  #Permet de créer une variable. Evite de tous repréciser à chaque service
+  &airflow-common
   image: apache/airflow
   environment: &airflow-common-env
     AIRFLOW__CORE__LOAD_EXAMPLES: false
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW_CONFIG: /opt/airflow/config/airflow.cfg
+    # Le mot de passe de l'utilisateur pour accéder au portail web sera stoké dans ce fichier
     AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS_FILE: /opt/airflow/config/passwords.json.generated
+    # Pas réussi à faire fonctionner Fab auth. semble être ignorer par l'initialisation.
     # AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
     # _AIRFLOW_WWW_USER_CREATE: 'true'
     # _AIRFLOW_WWW_USER_USERNAME: admin
