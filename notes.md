@@ -36,7 +36,7 @@ trip_update {
     route_id: "33"
     direction_id: 1
   }
-  stop_time_update {
+  stop_time_update { # loop
     stop_sequence: 0
     arrival {
     }
