@@ -16,7 +16,7 @@ def generate_number() -> int:
     return random.randint(1, 3)
 
 
-def allow_only_2(ti):
+def allow_only_2(ti=None):
     if ti.xcom_pull(task_ids="number", key="return_value") != "2":
         return "write_bad_result"
     else:
@@ -37,8 +37,9 @@ def parse_result(filename: str):
 with DAG("error_management_bis") as dag:
     filename = "exports/exported.txt"
     gen_number = PythonOperator(task_id="number", python_callable=generate_number)
-    # TODO: branchPythonOperator
-    branch = allow_only_2()
+
+    branch = BranchPythonOperator(task_id="allow_2", python_callable=allow_only_2)
+
     bad = PythonOperator(
         task_id="write_bad_result",
         python_callable=write_result,
