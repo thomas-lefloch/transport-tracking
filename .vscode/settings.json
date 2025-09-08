@@ -1,5 +1,6 @@
 {
     "python.analysis.diagnosticSeverityOverrides": {
-        "reportUnusedExpression": false
+        "reportUnusedExpression": false,
+        "reportOptionalMemberAccess": false
     }
 }
