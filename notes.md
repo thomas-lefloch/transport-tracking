@@ -102,6 +102,7 @@ https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/executor/ind
 
 **Metastore**
 Permet de stocker les données liés d'airflow lui même tel que les `Tasks`, les `Dags` 
+ 
 **XCom**
 Cross-comunication
 Permets aux `Tasks`de s'échanger des données entre elles
@@ -111,14 +112,4 @@ Permets aux `Tasks`de s'échanger des données entre elles
 task_instance.xcom_push(key="identifier as a string", value=any_serializable_value)
 # pulls the xcom variable with key "identifier as string" that was pushed from within task-1
 task_instance.xcom_pull(key="identifier as string", task_ids="task-1")
-
 ```
-
-
-
-TODO: 
-- logs
-- xcom
-- Ecrire dans un fichier
-- lire un fichier
-- duckdb
