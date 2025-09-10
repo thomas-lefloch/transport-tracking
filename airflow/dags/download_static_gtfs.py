@@ -1,16 +1,12 @@
-import subprocess
-
 import duckdb
 from airflow.providers.standard.operators.bash import BashOperator
-from airflow.providers.standard.operators.python import PythonOperator
 from airflow.sdk import task
 from airflow.utils.trigger_rule import TriggerRule
-
+import os
 from airflow import DAG
 
 
-# Il existe surement une variable pour "/opt/airflow" mais je n'ai pas réussi à la trouver
-@task.bash(cwd="/opt/airflow")
+@task.bash(cwd=os.environ["AIRFLOW_HOME"])
 def download_static_gtfs_data():
     import time
 
@@ -27,12 +23,12 @@ def download_static_gtfs_data():
 # on utilise donc python
 @task
 def unzip_static_gtfs_data(ti=None):
+    from zipfile import ZipFile
+
     zip_path: str = ti.xcom_pull(
         task_ids="download_static_gtfs_data", key="return_value"
     )
     gtfs_destination = zip_path[: zip_path.index(".")]
-
-    from zipfile import ZipFile
 
     with ZipFile(zip_path) as zip:
         zip.extractall(path=gtfs_destination)
@@ -68,16 +64,16 @@ def write_in_duckdb(ti=None):
 
 with DAG("download_static_gtfs") as dag:
     download = download_static_gtfs_data()
-
     unzip = unzip_static_gtfs_data()
-
     db_write = write_in_duckdb()
-
     cleanup = BashOperator(
         task_id="cleanup",
         bash_command=f"rm -rf tmp/",
-        cwd="/opt/airflow",
+        cwd=os.environ["AIRFLOW_HOME"],
         trigger_rule=TriggerRule.ALL_DONE,
     )
 
     download >> unzip >> db_write >> cleanup
+
+
+# TODO: archiving
