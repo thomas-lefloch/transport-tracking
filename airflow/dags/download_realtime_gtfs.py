@@ -2,6 +2,7 @@ import os
 import time
 
 import duckdb
+import helpers
 import requests
 from airflow.sdk import task
 from google.transit import gtfs_realtime_pb2
@@ -11,7 +12,7 @@ from airflow import DAG
 data_url = "https://ara-api.enroute.mobi/rla/gtfs/trip-update"
 stop_time_tablename = "stop_time_rt"
 vehicle_tablename = "vehicle"
-db_file = f"{os.environ["AIRFLOW_HOME"]}/warehouse/data.duckdb"
+db_file = f"{os.environ["AIRFLOW_HOME"]}/{helpers.DB_PATH}"
 
 
 def parse_vehicle(vehicle) -> dict:

@@ -3,22 +3,22 @@ import statistics
 from datetime import datetime
 
 import duckdb
+import helpers
 from airflow.sdk import task
-from helpers import find_latest_static_data
 
 from airflow import DAG
 
 
 @task
 def avg_delay(ti=None):
-    db_file = os.environ["AIRFLOW_HOME"] + "/warehouse/data.duckdb"
+    db_file = os.environ["AIRFLOW_HOME"] + "/" + helpers.DB_PATH
     # db_file = "airflow/warehouse/data.duckdb"
     results = []
     with duckdb.connect(db_file, read_only=True) as con:
         query = """
             SELECT stop_time.stop_id, 
-                datepart(['hour', 'minute', 'second'], stop_time_rt.time) AS realtime, 
-                datepart(['hour', 'minute', 'second'], arrival_time) AS scheduled_time 
+                stop_time_rt.time AS realtime, 
+                arrival_time AS scheduled_time 
             FROM stop_time_rt 
             INNER JOIN stop_time ON stop_time_rt.stop_id = stop_time.stop_id 
             WHERE stop_time_rt.trip_id = stop_time.trip_id; 
@@ -27,6 +27,7 @@ def avg_delay(ti=None):
 
     delays = []
     for res in results:
+        timezone_difference = 
         realtime_seconds = (
             res[1]["hour"] * 60 * 60 + res[1]["minute"] * 60 + res[1]["second"]
         )

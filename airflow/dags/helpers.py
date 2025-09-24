@@ -2,6 +2,9 @@ import os
 
 from airflow.sdk import task
 
+DB_PATH = "data/data.duckdb"
+"""chemin du fichier db depuis la racine airflow"""
+
 
 @task
 def find_latest_static_data():
