@@ -124,7 +124,7 @@ def setup_duckdb(filename: str) -> duckdb.DuckDBPyConnection:
 
 # every 30 minutes */30 * * * *
 # Fetch data from realtime flux and append it to duckdb
-with DAG("download_realtime_gtfs_data") as dag:
+with DAG("download_realtime_gtfs_data", schedule="20 * * * *") as dag:
     fetch_and_parse_content()
 
 # cleanup: archive db every week in warehouse with week number
