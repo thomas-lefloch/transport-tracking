@@ -210,3 +210,4 @@ __marimo__/
 **/airflow/logs/
 **/airflow/exports/
 **/airflow/data/
+**/airflow/warehouse/

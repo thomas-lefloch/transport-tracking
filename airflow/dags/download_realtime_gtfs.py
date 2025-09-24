@@ -1,16 +1,17 @@
-import duckdb
-from airflow.sdk import task
-from airflow import DAG
-from google.transit import gtfs_realtime_pb2
-import requests
-import time
 import os
+import time
 
+import duckdb
+import requests
+from airflow.sdk import task
+from google.transit import gtfs_realtime_pb2
+
+from airflow import DAG
 
 data_url = "https://ara-api.enroute.mobi/rla/gtfs/trip-update"
 stop_time_tablename = "stop_time_rt"
 vehicle_tablename = "vehicle"
-db_file = f"{os.environ["AIRFLOW_HOME"]}/data/gtfs_rt.duckdb"
+db_file = f"{os.environ["AIRFLOW_HOME"]}/warehouse/data.duckdb"
 
 
 def parse_vehicle(vehicle) -> dict:
@@ -39,7 +40,7 @@ def parse_stop_time(stop_time) -> dict:
     }
 
 
-@task
+@task(retries=3)
 def fetch_and_parse_content():
     feed = gtfs_realtime_pb2.FeedMessage()
     req = requests.get(data_url)
@@ -99,18 +100,18 @@ def setup_duckdb(filename: str) -> duckdb.DuckDBPyConnection:
     create_table_stmt = f"""
         CREATE TABLE IF NOT EXISTS {stop_time_tablename} (
             trip_id VARCHAR NOT NULL,
-            measured_at TIMESTAMP NOT NULL,
+            measured_at TIMESTAMP WITH TIME ZONE NOT NULL,
             stop_id VARCHAR NOT NULL,
             stop_sequence INT NOT NULL,
-            time TIMESTAMP
+            time TIMESTAMP WITH TIME ZONE
         );
         
         CREATE TABLE IF NOT EXISTS {vehicle_tablename} (
             trip_id VARCHAR NOT NULL,
-            measured_at TIMESTAMP NOT NULL,
+            measured_at TIMESTAMP WITH TIME ZONE NOT NULL,
             stop_id VARCHAR NOT NULL,
             vehicle_id VARCHAR NOT NULL,
-            time TIMESTAMP NOT NULL,
+            time TIMESTAMP WITH TIME ZONE NOT NULL,
             lat FLOAT NOT NULL,
             long FLOAT NOT NULL,
             bearing INTEGER NOT NULL
