@@ -1,8 +1,10 @@
+import os
+
 import duckdb
 from airflow.providers.standard.operators.bash import BashOperator
 from airflow.sdk import task
 from airflow.utils.trigger_rule import TriggerRule
-import os
+
 from airflow import DAG
 
 
@@ -36,18 +38,14 @@ def unzip_static_gtfs_data(ti=None):
     return gtfs_destination
 
 
-@task
+@task(retries=3)
 def write_in_duckdb(ti=None):
     import os
     from pathlib import Path
 
     extracted_gtfs = ti.xcom_pull(task_ids="unzip_static_gtfs_data", key="return_value")
-    filename = Path(extracted_gtfs).stem
-    db_root = f"data/{filename}"
-    if not os.path.isdir(db_root):
-        os.makedirs(db_root)
 
-    with duckdb.connect(f"{db_root}/gtfs_static.duckdb") as con:
+    with duckdb.connect(os.environ["AIRFLOW_HOME"] + "/warehouse/data.duckdb") as con:
         tables = [
             {"name": "route", "file": "routes.txt"},
             {"name": "stop", "file": "stops.txt"},
@@ -59,7 +57,9 @@ def write_in_duckdb(ti=None):
             stmt += f"CREATE TABLE {table["name"]} AS SELECT * FROM read_csv('{extracted_gtfs}/{table["file"]}', store_rejects = true);"
 
         con.sql(stmt)
-        con.sql("FROM reject_errors;").write_csv(f"{db_root}/errors.csv")
+        con.sql("FROM reject_errors;").write_csv(
+            os.environ["AIRFLOW_HOME"] + "/warehouse/errors.csv"
+        )
 
 
 with DAG("download_static_gtfs") as dag:

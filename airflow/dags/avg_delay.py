@@ -1,21 +1,63 @@
+import os
+import statistics
+from datetime import datetime
+
 import duckdb
+import helpers
 from airflow.sdk import task
-from helpers import find_latest_static_data
 
 from airflow import DAG
 
 
-# calculer la moyenne des retards
-# se connecter aux deux base de données
-# avoir un liste stop_id | heure prévue | heure réel
-# SELECT stop_id, heure_prevue, heure_reel FROM realtime_stop INNER JOIN stop_time ON stop_id
-# faire les moyennes en fonction de measured_at
-# Exporter ça dans un csv "measured_at, avg_delay"
-# Mettre ça dans power BI
 @task
-def print_latest(ti=None):
-    print(ti.xcom_pull(task_ids="find_latest_static_data", key="return_value"))
+def avg_delay(ti=None):
+    db_file = os.environ["AIRFLOW_HOME"] + "/" + helpers.DB_PATH
+    # db_file = "airflow/warehouse/data.duckdb"
+    results = []
+    with duckdb.connect(db_file, read_only=True) as con:
+        query = """
+            SELECT stop_time.stop_id, 
+                stop_time_rt.time AS realtime, 
+                arrival_time AS scheduled_time 
+            FROM stop_time_rt 
+            INNER JOIN stop_time ON stop_time_rt.stop_id = stop_time.stop_id 
+            WHERE stop_time_rt.trip_id = stop_time.trip_id; 
+"""
+        results = con.sql(query).fetchall()
+
+    delays = []
+    for res in results:
+        timezone_difference = 
+        realtime_seconds = (
+            res[1]["hour"] * 60 * 60 + res[1]["minute"] * 60 + res[1]["second"]
+        )
+
+        scheduled_seconds = (
+            res[2]["hour"] * 60 * 60 + res[2]["minute"] * 60 + res[2]["second"]
+        )
+        delays.append(realtime_seconds - scheduled_seconds)
+
+    time = datetime.today().time()
+    bucketed_minutes = 0 if time.minute < 30 else 30
+    bucketed_time = time.replace(minute=bucketed_minutes, second=0, microsecond=0)
+
+    csv_line = [
+        datetime.today().date().__str__(),
+        bucketed_time.__str__(),
+        statistics.mean(delays).__str__(),
+    ]
+
+    export_file = os.environ["AIRFLOW_HOME"] + "/exports/avg_delay.csv"
+    # export_file = "airflow/exports/avg_delay.csv"
+    with open(export_file, "a") as csv:
+        if csv.tell() == 0:  # header
+            csv.write(str.join(",", ["date", "hour", "avg_delay_second"]) + "\n")
+        csv.write(str.join(",", csv_line) + "\n")
 
 
-with DAG("avg_delay") as dag:
-    find_latest_static_data() >> print_latest()
+with DAG("avg_delay", schedule="30 * * * *") as dag:
+    avg_delay()
+
+
+if __name__ == "__main__":
+    avg_delay()
