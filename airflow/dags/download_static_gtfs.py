@@ -6,6 +6,7 @@ from airflow.sdk import task
 from airflow.utils.trigger_rule import TriggerRule
 
 from airflow import DAG
+import helpers
 
 
 @task.bash(cwd=os.environ["AIRFLOW_HOME"])
@@ -45,7 +46,7 @@ def write_in_duckdb(ti=None):
 
     extracted_gtfs = ti.xcom_pull(task_ids="unzip_static_gtfs_data", key="return_value")
 
-    with duckdb.connect(os.environ["AIRFLOW_HOME"] + "/warehouse/data.duckdb") as con:
+    with duckdb.connect(os.environ["AIRFLOW_HOME"] + "/" + helpers.DB_PATH) as con:
         tables = [
             {"name": "route", "file": "routes.txt"},
             {"name": "stop", "file": "stops.txt"},
