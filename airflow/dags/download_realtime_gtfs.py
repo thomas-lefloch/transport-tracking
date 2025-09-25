@@ -45,7 +45,7 @@ def fetch_and_parse_content():
     req = requests.get(data_url)
     feed.ParseFromString(req.content)
 
-    measured_at = int(time.time()) * 1000000  # duckdb is expecting millisceonds
+    measured_at = int(time.time()) * 1000000
     stop_time_data = []
     vehicle_data = []
 
