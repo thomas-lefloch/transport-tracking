@@ -1,6 +1,7 @@
 import os
 import statistics
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import duckdb
 import helpers
@@ -17,32 +18,26 @@ def avg_delay(ti=None):
     with duckdb.connect(db_file, read_only=True) as con:
         query = """
             SELECT stop_time.stop_id, 
-                stop_time_rt.time AS realtime, 
-                arrival_time AS scheduled_time 
+                stop_time_rt.time AT TIME ZONE 'Europe/Paris',
+                arrival_time,
+                (stop_time_rt.time AT TIME ZONE 'Europe/Paris')::TIME -
+                arrival_time AS delay 
             FROM stop_time_rt 
             INNER JOIN stop_time ON stop_time_rt.stop_id = stop_time.stop_id 
             WHERE stop_time_rt.trip_id = stop_time.trip_id; 
-"""
+        """
         results = con.sql(query).fetchall()
 
     delays = []
     for res in results:
-        timezone_difference = 
-        realtime_seconds = (
-            res[1]["hour"] * 60 * 60 + res[1]["minute"] * 60 + res[1]["second"]
-        )
-
-        scheduled_seconds = (
-            res[2]["hour"] * 60 * 60 + res[2]["minute"] * 60 + res[2]["second"]
-        )
-        delays.append(realtime_seconds - scheduled_seconds)
+        # delays.append(realtime_seconds - scheduled_seconds)
 
     time = datetime.today().time()
     bucketed_minutes = 0 if time.minute < 30 else 30
     bucketed_time = time.replace(minute=bucketed_minutes, second=0, microsecond=0)
 
     csv_line = [
-        datetime.today().date().__str__(),
+        time.date().__str__(),
         bucketed_time.__str__(),
         statistics.mean(delays).__str__(),
     ]
